@@ -1,1 +1,1 @@
-# Learning devops now
+# Understanding/Implementing devops now
