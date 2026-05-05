@@ -1,0 +1,68 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Documentation and extras
+docs/
+README.md
+LICENSE
+CONTRIBUTING.md
+
+# Docker and compose
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Development and testing
+tests/
+test_*
+*_test.py
+conftest.py
+.env.local
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Node and other tools
+node_modules/
+.npm
+package-lock.json
+yarn.lock
