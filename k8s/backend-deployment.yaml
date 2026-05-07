@@ -59,10 +59,19 @@ spec:
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 20
+          # Resource management is critical for cluster stability.
+          # Requests: Used by the scheduler to find a suitable node.
+          # Limits: Hard cap to prevent a single pod from starving others (Noisy Neighbor).
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
+              # FastAPI + PyPDF2 needs a baseline to start and handle initial requests.
+              # 250m ensures the pod isn't scheduled on an over-committed node.
+              cpu: "250m"
+              # 256Mi is sufficient for the Python runtime and processing moderately sized PDFs.
+              memory: "256Mi"
             limits:
-              cpu: "500m"
+              # Limit CPU to 1 core to prevent a complex PDF extraction from consuming all node CPU.
+              cpu: "1000m"
+              # 512Mi limit prevents OOM (Out Of Memory) issues from crashing the node if a massive PDF is uploaded.
               memory: "512Mi"
+

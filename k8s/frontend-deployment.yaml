@@ -38,10 +38,16 @@ spec:
               port: 3000
             initialDelaySeconds: 15
             periodSeconds: 20
+          # Nginx static serving is very lightweight.
           resources:
             requests:
+              # Minimal CPU needed to serve static assets.
               cpu: "50m"
+              # 64Mi is enough for the Nginx process and small cache.
               memory: "64Mi"
             limits:
-              cpu: "250m"
-              memory: "256Mi"
+              # Limit ensures it doesn't burst beyond what's reasonable for a static server.
+              cpu: "100m"
+              # Prevents memory leaks in the container from affecting the node.
+              memory: "128Mi"
+
