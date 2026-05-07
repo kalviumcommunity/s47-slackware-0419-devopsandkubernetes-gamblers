@@ -1,14 +1,39 @@
 """
-Simple Flask application for demonstrating Docker best practices.
-This application serves as a DevOps learning project example.
+FastAPI application for PDF text extraction.
+Provides API endpoints to upload PDFs and extract text content.
 """
 
-from flask import Flask, jsonify, request
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 from datetime import datetime
 import os
+import PyPDF2
+from io import BytesIO
 
-app = Flask(__name__)
+# Create FastAPI app
+app = FastAPI(
+    title="PDF Text Extractor API",
+    description="Extract text from PDF files using FastAPI",
+    version="1.0.0"
+)
+
+# Configure CORS to allow requests from React frontend
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Configure logging
 logging.basicConfig(
@@ -22,63 +47,87 @@ APP_ENV = os.getenv('APP_ENV', 'development')
 APP_VERSION = os.getenv('APP_VERSION', '1.0.0')
 
 
-@app.route('/', methods=['GET'])
+@app.get('/')
 def home():
     """Root endpoint with basic application info."""
     logger.info("Home endpoint accessed")
-    return jsonify({
+    return {
         'status': 'success',
-        'message': 'DevOps and Kubernetes Learning Application',
+        'message': 'PDF Text Extractor API',
         'version': APP_VERSION,
         'environment': APP_ENV,
         'timestamp': datetime.utcnow().isoformat()
-    })
+    }
 
 
-@app.route('/health', methods=['GET'])
+@app.get('/health')
 def health_check():
     """Health check endpoint for container orchestration."""
     logger.info("Health check performed")
-    return jsonify({
+    return {
         'status': 'healthy',
         'timestamp': datetime.utcnow().isoformat()
-    }), 200
+    }
 
 
-@app.route('/api/info', methods=['GET'])
+@app.post('/api/extract-text')
+async def extract_text(file: UploadFile = File(...)):
+    """
+    Extract text from uploaded PDF file.
+    """
+    try:
+        # Validate file type
+        if file.content_type != 'application/pdf':
+            raise HTTPException(status_code=400, detail="File must be a PDF")
+
+        # Read file content
+        content = await file.read()
+
+        # Extract text from PDF
+        pdf_file = BytesIO(content)
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+
+        # Get number of pages
+        num_pages = len(pdf_reader.pages)
+
+        # Extract text from all pages
+        extracted_text = ""
+        for page_num in range(num_pages):
+            page = pdf_reader.pages[page_num]
+            text = page.extract_text() or ''
+            extracted_text += text
+            extracted_text += f"\n--- Page {page_num + 1} ---\n"
+
+        logger.info(f"Successfully extracted text from PDF: {file.filename}")
+
+        return {
+            'status': 'success',
+            'filename': file.filename,
+            'text': extracted_text,
+            'pages': num_pages,
+            'timestamp': datetime.utcnow().isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error extracting text from PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
+
+
+@app.get('/api/info')
 def get_info():
     """Returns application information."""
-    logger.info("Info endpoint accessed")
-    return jsonify({
-        'application': 'DevOps Project',
-        'purpose': 'Learning Docker best practices',
-        'docker_optimized': True,
+    return {
+        'application': 'PDF Text Extractor',
         'version': APP_VERSION,
-        'container_environment': APP_ENV
-    })
+        'environment': APP_ENV,
+        'features': ['PDF upload', 'Text extraction', 'Page counting']
+    }
 
 
-@app.route('/api/ready', methods=['GET'])
-def readiness_check():
-    """Readiness probe for Kubernetes deployments."""
-    logger.info("Readiness check performed")
-    return jsonify({'ready': True}), 200
-
-
-@app.errorhandler(404)
-def not_found(error):
-    """Handle 404 errors."""
-    return jsonify({'error': 'Not found'}), 404
-
-
-@app.errorhandler(500)
-def internal_error(error):
-    """Handle 500 errors."""
-    logger.error(f"Internal error: {error}")
-    return jsonify({'error': 'Internal server error'}), 500
-
-
-if __name__ == '__main__':
-    port = int(os.getenv('PORT', 5000))
-    logger.info(f"Starting Flask application on port {port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", "8000"))
+    logger.info(f"Starting FastAPI (uvicorn) on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)
