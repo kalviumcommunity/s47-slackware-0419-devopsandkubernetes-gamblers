@@ -5,15 +5,18 @@ metadata:
   labels:
     app: pdf-extractor-backend
 spec:
-  replicas: 3
+  replicas: 3 # Manual Scaling: Adjust this value to scale manually, or use 'kubectl scale deployment/pdf-extractor-backend --replicas=5'
   selector:
     matchLabels:
       app: pdf-extractor-backend
+  revisionHistoryLimit: 5 # Keeps the last 5 ReplicaSets for easy rollbacks
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+      # maxSurge: 1 means K8s will create 1 new pod before killing an old one (4 pods total during update)
+      maxSurge: 1 
+      # maxUnavailable: 1 means K8s will kill at most 1 pod while creating new ones (2 pods minimum during update)
+      maxUnavailable: 1 
   template:
     metadata:
       labels:
