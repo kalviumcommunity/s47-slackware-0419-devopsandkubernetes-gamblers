@@ -36,6 +36,16 @@ spec:
                 configMapKeyRef:
                   name: pdf-extractor-config
                   key: APP_VERSION
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pdf-extractor-secrets
+                  key: DB_PASSWORD
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pdf-extractor-secrets
+                  key: API_KEY
           readinessProbe:
             httpGet:
               path: /health
