@@ -39,6 +39,11 @@ spec:
                 configMapKeyRef:
                   name: pdf-extractor-config
                   key: APP_VERSION
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: pdf-extractor-config
+                  key: LOG_LEVEL
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:

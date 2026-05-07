@@ -3,7 +3,7 @@ FastAPI application for PDF text extraction.
 Provides API endpoints to upload PDFs and extract text content.
 """
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 from datetime import datetime
@@ -35,16 +35,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
 # Application configuration from environment
 APP_ENV = os.getenv('APP_ENV', 'development')
 APP_VERSION = os.getenv('APP_VERSION', '1.0.0')
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+API_KEY = os.getenv('API_KEY', 'default-insecure-key')
+
+# Configure logging dynamically from ConfigMap
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 @app.get('/')
@@ -163,6 +165,24 @@ def get_info():
         'version': APP_VERSION,
         'environment': APP_ENV,
         'features': ['PDF upload', 'Text extraction', 'Page counting']
+    }
+
+def verify_api_key(x_api_key: str = Header(None)):
+    """Dependency to verify API Key"""
+    if x_api_key != API_KEY:
+        logger.warning("Failed unauthorized access attempt to secure endpoint")
+        raise HTTPException(status_code=401, detail="Invalid API Key")
+    return x_api_key
+
+@app.get('/api/secure-info')
+def get_secure_info(api_key: str = Depends(verify_api_key)):
+    """Returns sensitive application information, protected by API Key."""
+    logger.info("Secure endpoint accessed successfully")
+    return {
+        'status': 'success',
+        'message': 'You have successfully authenticated using the Secret!',
+        'db_password_length': len(os.getenv('DB_PASSWORD', '')), # Proof that DB password is also there
+        'log_level': LOG_LEVEL
     }
 
 
