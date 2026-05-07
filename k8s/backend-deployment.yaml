@@ -48,14 +48,14 @@ spec:
                   key: API_KEY
           readinessProbe:
             httpGet:
-              path: /health
+              path: /readiness
               port: 8000
             initialDelaySeconds: 3
             periodSeconds: 5
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /health
+              path: /liveness
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 20

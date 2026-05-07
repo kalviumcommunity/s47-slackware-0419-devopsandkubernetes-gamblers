@@ -60,9 +60,49 @@ def home():
     }
 
 
+# Global state variables for demonstrating Kubernetes Probes
+APP_STATE = {
+    'is_alive': True,
+    'is_ready': True
+}
+
+@app.get('/liveness')
+def liveness_check():
+    """Liveness probe: Checks if container is alive and running. If 500, K8s RESTARTS the pod."""
+    if not APP_STATE['is_alive']:
+        logger.error("Liveness probe failed! App is simulated as dead.")
+        raise HTTPException(status_code=500, detail="Application is dead")
+    return {"status": "alive"}
+
+@app.get('/readiness')
+def readiness_check():
+    """Readiness probe: Checks if app can handle traffic. If 500, K8s STOPS SENDING TRAFFIC, but no restart."""
+    if not APP_STATE['is_ready']:
+        logger.warning("Readiness probe failed! App is simulated as not ready for traffic.")
+        raise HTTPException(status_code=503, detail="Application not ready")
+    return {"status": "ready"}
+
+@app.post('/break-liveness')
+def break_liveness():
+    """Simulates a fatal application crash for Liveness Probe"""
+    APP_STATE['is_alive'] = False
+    return {"message": "Liveness broken. Pod should be restarted by Kubernetes soon."}
+
+@app.post('/break-readiness')
+def break_readiness():
+    """Simulates the app being busy or temporarily unable to serve requests for Readiness Probe"""
+    APP_STATE['is_ready'] = False
+    return {"message": "Readiness broken. Kubernetes will remove this Pod from the Service load balancer."}
+
+@app.post('/fix-readiness')
+def fix_readiness():
+    """Restores the readiness state"""
+    APP_STATE['is_ready'] = True
+    return {"message": "Readiness restored. Kubernetes will start sending traffic again."}
+
 @app.get('/health')
 def health_check():
-    """Health check endpoint for container orchestration."""
+    """Generic health check endpoint."""
     logger.info("Health check performed")
     return {
         'status': 'healthy',
