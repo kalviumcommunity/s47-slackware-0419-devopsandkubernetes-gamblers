@@ -5,10 +5,15 @@ metadata:
   labels:
     app: pdf-extractor-backend
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: pdf-extractor-backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   template:
     metadata:
       labels:
