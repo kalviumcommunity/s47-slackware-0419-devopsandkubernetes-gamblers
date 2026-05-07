@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pdf-extractor-frontend
+  labels:
+    app: pdf-extractor-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pdf-extractor-frontend
+  template:
+    metadata:
+      labels:
+        app: pdf-extractor-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: pdf-extractor-frontend:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: VITE_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pdf-extractor-config
+                  key: VITE_API_URL
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"

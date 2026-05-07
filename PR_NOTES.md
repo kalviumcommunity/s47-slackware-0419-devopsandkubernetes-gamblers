@@ -19,6 +19,8 @@ This PR contains changes intended to demonstrate container debugging and fixes. 
    - `app.py` — removed mixed Flask/FastAPI code and provided clean FastAPI app
    - `docker-compose.yml` — adjusted for local debugging (user=root; --reload)
    - Added `DOCKER_DEBUG.md`, `docker-debug.sh`, `docker-debug.bat` and `PR_NOTES.md` to document the flow
+   - `k8s/` — added Kubernetes manifests for deployments, services, configmap and optional ingress
+   - `K8S_GUIDE.md` — added a guide explaining Kubernetes deployment and local debugging
 
 4. Verification checklist for reviewers
    - [ ] `docker-compose build --no-cache` completes successfully
